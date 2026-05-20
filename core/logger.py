@@ -1,13 +1,8 @@
-"""
-core/logger.py — How the agent talks to you.
-
-"""
-
 from __future__ import annotations
-from typing import Optional
-import logging
 
-# ANSI terminal colors
+import logging
+from typing import Optional
+
 
 _RESET = "\033[0m"
 _BOLD = "\033[1m"
@@ -30,21 +25,51 @@ _LEVEL_ICONS = {
 }
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Agent identity colors/icons
+# ─────────────────────────────────────────────────────────────────────────────
+
+_AGENT_COLORS = {
+    "issue_agent": "\033[94m",
+    "localization_agent": "\033[95m",
+    "fix_agent": "\033[96m",
+    "test_agent": "\033[92m",
+    "reflection_agent": "\033[93m",
+    "pr_agent": "\033[91m",
+}
+
+_AGENT_ICONS = {
+    "issue_agent": "📋",
+    "localization_agent": "🔍",
+    "fix_agent": "🔧",
+    "test_agent": "🧪",
+    "reflection_agent": "🤔",
+    "pr_agent": "📬",
+}
+
+
 class ColorFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         level = record.levelname
 
-        color = _LEVEL_COLORS.get(level, "")
-        icon = _LEVEL_ICONS.get(level, "•")
+        level_color = _LEVEL_COLORS.get(level, "")
+        level_icon = _LEVEL_ICONS.get(level, "•")
 
-        prefix = f"{color}{icon} {level}{_RESET}"
+        agent_color = _AGENT_COLORS.get(record.name, "")
+        agent_icon = _AGENT_ICONS.get(record.name, "🤖")
 
-        return f"{prefix} {record.name}: {record.getMessage()}"
+        level_part = (
+            f"{level_color}{level_icon} {level}{_RESET}"
+        )
+
+        agent_part = (
+            f"{agent_color}{agent_icon} {record.name}{_RESET}"
+        )
+
+        return f"{level_part} {agent_part}: {record.getMessage()}"
+
 
 def get_logger(name: str, run_id: Optional[str] = None) -> logging.Logger:
-    """
-    Create or return a shared logger instance.
-    """
     logger = logging.getLogger(name)
 
     if logger.handlers:
@@ -53,12 +78,7 @@ def get_logger(name: str, run_id: Optional[str] = None) -> logging.Logger:
     logger.setLevel(logging.INFO)
 
     handler = logging.StreamHandler()
-
-    formatter = logging.Formatter(
-        "[%(levelname)s] %(name)s: %(message)s"
-    )
-
-    handler.setFormatter(formatter)
+    handler.setFormatter(ColorFormatter())
 
     logger.addHandler(handler)
     logger.propagate = False
