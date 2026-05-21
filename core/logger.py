@@ -23,23 +23,23 @@ _DIM   = "\033[2m"   # slightly faded (used for timestamps)
 
 
 _LEVEL_COLORS = {
-    "DEBUG":    "\033[36m",   # cyan
-    "INFO":     "\033[32m",   # green
-    "WARNING":  "\033[33m",   # yellow
-    "ERROR":    "\033[31m",   # red
-    "CRITICAL": "\033[35m",   # magenta
+    "DEBUG":    "\033[36m",   
+    "INFO":     "\033[32m",   
+    "WARNING":  "\033[33m",   
+    "ERROR":    "\033[31m",   
+    "CRITICAL": "\033[35m",   
 }
 
 _AGENT_COLORS = {
-    "issue_agent":        "\033[94m",   # bright blue
-    "localization_agent": "\033[95m",   # bright magenta
-    "fix_agent":          "\033[96m",   # bright cyan
-    "test_agent":         "\033[92m",   # bright green
-    "reflection_agent":   "\033[93m",   # bright yellow
-    "pr_agent":           "\033[91m",   # bright red
-    "graph":              "\033[97m",   # white
-    "tools":              "\033[36m",   # cyan
-    "api":                "\033[34m",   # blue
+    "issue_agent":        "\033[94m",   
+    "localization_agent": "\033[95m",   
+    "fix_agent":          "\033[96m",   
+    "test_agent":         "\033[92m",   
+    "reflection_agent":   "\033[93m",   
+    "pr_agent":           "\033[91m",   
+    "graph":              "\033[97m", 
+    "tools":              "\033[36m", 
+    "api":                "\033[34m", 
 }
 
 _LEVEL_ICONS = {
@@ -112,3 +112,26 @@ class ConsoleFormatter(logging.Formatter):
             exc_str = "\n" + self.formatException(record.exc_info)
 
         return f"{ts} {level_str} {agent_str}{record.getMessage()}{run_str}{extra_str}{exc_str}"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JSON formatter — saves structured data to a log file
+# ─────────────────────────────────────────────────────────────────────────────
+
+class JSONFormatter(logging.Formatter):
+    """ Writes each log entry as one JSON line to the log file."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload: dict[str, Any] = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level":     record.levelname,
+            "logger":    record.name,
+            "message":   record.getMessage(),
+        }
+        # Attach optional context if present
+        for field in ("agent", "run_id", "extra_data"):
+            val = getattr(record, field, None)
+            if val is not None:
+                payload[field] = val
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+        return json.dumps(payload, default=str)
