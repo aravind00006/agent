@@ -135,3 +135,16 @@ class JSONFormatter(logging.Formatter):
         if record.exc_info:
             payload["exception"] = self.formatException(record.exc_info)
         return json.dumps(payload, default=str)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Setup function — call once at startup
+# ─────────────────────────────────────────────────────────────────────────────
+_ROOT = "bugfixer"
+_initialized = False
+
+def setup_logging(
+    *,
+    level: str = "DEBUG",
+    run_id: Optional[str] = None,
+    log_to_file: bool = True,
+) -> None:
