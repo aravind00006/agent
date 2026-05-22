@@ -148,3 +148,12 @@ def setup_logging(
     run_id: Optional[str] = None,
     log_to_file: bool = True,
 ) -> None:
+
+    root = logging.getLogger(_ROOT)
+    root.setLevel(getattr(logging, level.upper(), logging.DEBUG))
+    root.handlers.clear()
+
+    console = logging.StreamHandler(sys.stdout)
+    console.setFormatter(ConsoleFormatter())
+    console.setLevel(getattr(logging, level.upper(), logging.DEBUG))
+    root.addHandler(console)
