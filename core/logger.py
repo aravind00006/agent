@@ -157,3 +157,18 @@ def setup_logging(
     console.setFormatter(ConsoleFormatter())
     console.setLevel(getattr(logging, level.upper(), logging.DEBUG))
     root.addHandler(console)
+
+    if log_to_file:
+        log_dir = Path("logs") / (run_id or "global")
+        log_dir.mkdir(parents=True, exist_ok=True)
+
+        fh = logging.FileHandler(
+            log_dir / "agent.jsonl",
+            mode="a",
+            encoding="utf-8",
+        )
+
+        fh.setFormatter(JSONFormatter())
+        fh.setLevel(logging.DEBUG)
+
+        root.addHandler(fh)
