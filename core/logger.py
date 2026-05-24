@@ -153,22 +153,23 @@ def setup_logging(
     root.setLevel(getattr(logging, level.upper(), logging.DEBUG))
     root.handlers.clear()
 
+    # Console handler — colored output to your terminal
     console = logging.StreamHandler(sys.stdout)
     console.setFormatter(ConsoleFormatter())
     console.setLevel(getattr(logging, level.upper(), logging.DEBUG))
     root.addHandler(console)
 
+    # File handler — JSON lines on disk
     if log_to_file:
         log_dir = Path("logs") / (run_id or "global")
         log_dir.mkdir(parents=True, exist_ok=True)
-
-        fh = logging.FileHandler(
-            log_dir / "agent.jsonl",
-            mode="a",
-            encoding="utf-8",
-        )
-
+        fh = logging.FileHandler(log_dir / "agent.jsonl", mode="a", encoding="utf-8")
         fh.setFormatter(JSONFormatter())
         fh.setLevel(logging.DEBUG)
-
         root.addHandler(fh)
+
+    # Silence noisy third-party libraries
+    for lib in ("httpx", "httpcore", "urllib3", "git", "docker"):
+        logging.getLogger(lib).setLevel(logging.WARNING)
+
+    _initialized = True
