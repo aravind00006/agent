@@ -204,3 +204,21 @@ class AgentLogger:
             exc_info=exc_info,
             stacklevel=3,
         )
+
+    # ───────────────────── Standard log levels ────────────────────────────────
+    def debug(self, msg: str, **kwargs: Any) -> None:
+        self._emit(logging.DEBUG, msg, **kwargs)
+
+    def info(self, msg: str, **kwargs: Any) -> None:
+        self._emit(logging.INFO, msg, **kwargs)
+
+    def warning(self, msg: str, **kwargs: Any) -> None:
+        self._emit(logging.WARNING, msg, **kwargs)
+
+    def error(self, msg: str, exc_info: bool = False, **kwargs: Any) -> None:
+        self._emit(logging.ERROR, msg, exc_info=exc_info, **kwargs)
+
+    def critical(self, msg: str, exc_info: bool = False, **kwargs: Any) -> None:
+        self._emit(logging.CRITICAL, msg, exc_info=exc_info, **kwargs)
+
+    
