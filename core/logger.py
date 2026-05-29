@@ -221,4 +221,57 @@ class AgentLogger:
     def critical(self, msg: str, exc_info: bool = False, **kwargs: Any) -> None:
         self._emit(logging.CRITICAL, msg, exc_info=exc_info, **kwargs)
 
-    
+    # ─────── Semantic shortcuts — describe WHAT happened, not just the level ───────
+    def step(self, step_name: str, **kwargs: Any) -> None:
+        self._emit(logging.INFO, f"▶  {step_name}", **kwargs)
+
+    def success(self, msg: str, **kwargs: Any) -> None:
+        self._emit(logging.INFO, f"✔  {msg}", **kwargs)
+
+    def fail(self, msg: str, exc_info: bool = False, **kwargs: Any) -> None:
+        self._emit(logging.ERROR, f"✘  {msg}", exc_info=exc_info, **kwargs)
+
+    def tokens(self, used: int, step: Optional[str] = None, **kwargs: Any) -> None:
+        label = f" [{step}]" if step else ""
+        self._emit(logging.DEBUG, f"🔢 Tokens used{label}: {used:,}", tokens=used, **kwargs)
+
+    def retry(self, attempt: int, max_retries: int, reason: str) -> None:
+        self._emit(
+            logging.WARNING,
+            f"↺  Retry {attempt}/{max_retries} — {reason}",
+            attempt=attempt,
+            max_retries=max_retries,
+            reason=reason,
+        )
+
+    def tool_call(self, tool_name: str, **kwargs: Any) -> None:
+        self._emit(logging.DEBUG, f"🛠  Tool call: {tool_name}", tool=tool_name, **kwargs)
+
+    def tool_result(self, tool_name: str, success: bool, **kwargs: Any) -> None:
+        icon  = "✔" if success else "✘"
+        level = logging.DEBUG if success else logging.WARNING
+
+        self._emit(
+            level,
+            f"{icon}  Tool result: {tool_name}",
+            tool=tool_name,
+            success=success,
+            **kwargs,
+        )
+
+    def patch(self, file_path: str, strategy: str, **kwargs: Any) -> None:
+        self._emit(
+            logging.INFO,
+            f"🩹 Patch applied: {file_path}",
+            file=file_path,
+            strategy=strategy,
+            **kwargs,
+        )
+
+    def pr(self, pr_url: str, **kwargs: Any) -> None:
+        self._emit(
+            logging.INFO,
+            f"📬 PR opened: {pr_url}",
+            pr_url=pr_url,
+            **kwargs,
+        )
