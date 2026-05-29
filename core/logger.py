@@ -148,6 +148,8 @@ def setup_logging(
     run_id: Optional[str] = None,
     log_to_file: bool = True,
 ) -> None:
+    
+    global _initialized
 
     root = logging.getLogger(_ROOT)
     root.setLevel(getattr(logging, level.upper(), logging.DEBUG))
@@ -173,3 +175,32 @@ def setup_logging(
         logging.getLogger(lib).setLevel(logging.WARNING)
 
     _initialized = True
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AgentLogger — the class every agent uses
+# ────────────────────────────────────────────────────────────────────────────
+
+class AgentLogger:
+    """
+    A logger scoped to one agent.
+    """
+
+    def __init__(self, agent_name: str, run_id: Optional[str] = None) -> None:
+        self.agent_name = agent_name
+        self.run_id     = run_id
+        self._log       = logging.getLogger(f"{_ROOT}.{agent_name}")
+
+    def _emit(self, level: int, msg: str, exc_info: bool = False, **kwargs: Any) -> None:
+        """Internal: add agent/run context and emit the log record."""
+        extra: dict[str, Any] = {"agent": self.agent_name, "run_id": self.run_id}
+
+        if kwargs:
+            extra["extra_data"] = kwargs
+
+        self._log.log(
+            level,
+            msg,
+            extra=extra,
+            exc_info=exc_info,
+            stacklevel=3,
+        )
