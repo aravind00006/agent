@@ -205,37 +205,49 @@ class AgentLogger:
             stacklevel=3,
         )
 
-    # ───────────────────── Standard log levels ────────────────────────────────
+    # ── Standard log levels ───────────────────────────────────────────────────
+
     def debug(self, msg: str, **kwargs: Any) -> None:
+        """Low-level detail. Shown only in DEBUG mode."""
         self._emit(logging.DEBUG, msg, **kwargs)
 
     def info(self, msg: str, **kwargs: Any) -> None:
+        """Normal progress messages."""
         self._emit(logging.INFO, msg, **kwargs)
 
     def warning(self, msg: str, **kwargs: Any) -> None:
+        """Something unexpected but recoverable."""
         self._emit(logging.WARNING, msg, **kwargs)
 
     def error(self, msg: str, exc_info: bool = False, **kwargs: Any) -> None:
+        """Something went wrong."""
         self._emit(logging.ERROR, msg, exc_info=exc_info, **kwargs)
 
     def critical(self, msg: str, exc_info: bool = False, **kwargs: Any) -> None:
+        """Fatal error — agent cannot continue."""
         self._emit(logging.CRITICAL, msg, exc_info=exc_info, **kwargs)
 
-    # ─────── Semantic shortcuts — describe WHAT happened, not just the level ───────
+    # ── Semantic shortcuts — describe WHAT happened, not just the level ───────
+
     def step(self, step_name: str, **kwargs: Any) -> None:
+        """Log the start of a named step. Shows ▶ prefix."""
         self._emit(logging.INFO, f"▶  {step_name}", **kwargs)
 
     def success(self, msg: str, **kwargs: Any) -> None:
+        """Log a successful outcome. Shows ✔ prefix."""
         self._emit(logging.INFO, f"✔  {msg}", **kwargs)
 
     def fail(self, msg: str, exc_info: bool = False, **kwargs: Any) -> None:
+        """Log a failure. Shows ✘ prefix."""
         self._emit(logging.ERROR, f"✘  {msg}", exc_info=exc_info, **kwargs)
 
     def tokens(self, used: int, step: Optional[str] = None, **kwargs: Any) -> None:
+        """Log how many tokens the LLM used."""
         label = f" [{step}]" if step else ""
         self._emit(logging.DEBUG, f"🔢 Tokens used{label}: {used:,}", tokens=used, **kwargs)
 
     def retry(self, attempt: int, max_retries: int, reason: str) -> None:
+        """Log a retry attempt with its reason."""
         self._emit(
             logging.WARNING,
             f"↺  Retry {attempt}/{max_retries} — {reason}",
@@ -245,33 +257,23 @@ class AgentLogger:
         )
 
     def tool_call(self, tool_name: str, **kwargs: Any) -> None:
+        """Log that a tool is being called."""
         self._emit(logging.DEBUG, f"🛠  Tool call: {tool_name}", tool=tool_name, **kwargs)
 
     def tool_result(self, tool_name: str, success: bool, **kwargs: Any) -> None:
+        """Log the result of a tool call."""
         icon  = "✔" if success else "✘"
         level = logging.DEBUG if success else logging.WARNING
-
-        self._emit(
-            level,
-            f"{icon}  Tool result: {tool_name}",
-            tool=tool_name,
-            success=success,
-            **kwargs,
-        )
+        self._emit(level, f"{icon}  Tool result: {tool_name}", tool=tool_name, success=success, **kwargs)
 
     def patch(self, file_path: str, strategy: str, **kwargs: Any) -> None:
-        self._emit(
-            logging.INFO,
-            f"🩹 Patch applied: {file_path}",
-            file=file_path,
-            strategy=strategy,
-            **kwargs,
-        )
+        """Log that a code patch was applied."""
+        self._emit(logging.INFO, f"🩹 Patch applied: {file_path}", file=file_path, strategy=strategy, **kwargs)
 
     def pr(self, pr_url: str, **kwargs: Any) -> None:
-        self._emit(
-            logging.INFO,
-            f"📬 PR opened: {pr_url}",
-            pr_url=pr_url,
-            **kwargs,
-        )
+        """Log that a Pull Request was opened."""
+        self._emit(logging.INFO, f"📬 PR opened: {pr_url}", pr_url=pr_url, **kwargs)
+
+    def timed(self, label: str) -> "_TimedBlock":
+        """logs how long a block of code takes."""
+        return _TimedBlock(self, label)
