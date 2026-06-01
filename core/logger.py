@@ -306,3 +306,13 @@ class _TimedBlock:
                 f"⏱  Done:  {self._label}",
                 latency_s=round(elapsed, 3),
             )
+
+def get_logger(agent_name: str, run_id: Optional[str] = None) -> AgentLogger:
+    """
+    Get a logger for an agent. This is the only function you need to import.
+
+    """
+    if not _initialized:
+        setup_logging()
+
+    return AgentLogger(agent_name, run_id=run_id)
