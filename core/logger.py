@@ -291,3 +291,18 @@ class _TimedBlock:
         self._start = time.perf_counter()
         self._log.debug(f"⏱  Start: {self._label}")
         return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        elapsed = time.perf_counter() - self._start
+
+        if exc_type:
+            self._log.error(
+                f"⏱  Failed: {self._label}",
+                latency_s=round(elapsed, 3),
+                exc_info=True,
+            )
+        else:
+            self._log.debug(
+                f"⏱  Done:  {self._label}",
+                latency_s=round(elapsed, 3),
+            )
