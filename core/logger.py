@@ -333,8 +333,8 @@ def log_run_start(run_id: str, issue_url: str) -> None:
 
     bar = "═" * _W
 
-    log.info(f"\n{bar}")
-    log.info(f"  🤖  AI BUG FIXER AGENT  —  Run #{run_id[:8]}")
+    log.info(bar)
+    log.info(f"  🤖  AI BUG FIXER AGENT  —  Run start")
     log.info(f"  📎  Issue : {issue_url}")
     log.info(f"  🕐  Start : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     log.info(bar)
@@ -364,7 +364,7 @@ def log_run_end(
         f"  📊  Tokens: {total_tokens:,}   Retries: {retries}   Elapsed: {elapsed_s:.1f}s"
     )
 
-    log.info(bar + "\n")
+    log.info(bar)
 
 def log_agent_transition(from_agent: str, to_agent: str, run_id: str) -> None:
     """Log when the graph moves from one agent to the next."""
