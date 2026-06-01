@@ -286,3 +286,8 @@ class _TimedBlock:
         self._log = logger
         self._label = label
         self._start = 0.0
+
+    def __enter__(self) -> "_TimedBlock":
+        self._start = time.perf_counter()
+        self._log.debug(f"⏱  Start: {self._label}")
+        return self
