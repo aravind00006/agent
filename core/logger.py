@@ -277,3 +277,12 @@ class AgentLogger:
     def timed(self, label: str) -> "_TimedBlock":
         """logs how long a block of code takes."""
         return _TimedBlock(self, label)
+    
+
+class _TimedBlock:
+    """Used by log.timed() — measures and logs elapsed time."""
+
+    def __init__(self, logger: AgentLogger, label: str) -> None:
+        self._log = logger
+        self._label = label
+        self._start = 0.0
