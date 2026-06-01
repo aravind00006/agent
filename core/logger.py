@@ -324,3 +324,44 @@ def get_logger(agent_name: str, run_id: Optional[str] = None) -> AgentLogger:
 # Run-level banners —  to mark start/end of each full run   
 # ──────────────────────────────────────────────────────────
 
+_W = 72   # banner width
+
+def log_run_start(run_id: str, issue_url: str) -> None:
+    """Print a big banner when a new agent run starts."""
+
+    log = get_logger("graph", run_id=run_id)
+
+    bar = "═" * _W
+
+    log.info(f"\n{bar}")
+    log.info(f"  🤖  AI BUG FIXER AGENT  —  Run #{run_id[:8]}")
+    log.info(f"  📎  Issue : {issue_url}")
+    log.info(f"  🕐  Start : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    log.info(bar)
+    
+def log_run_end(
+    run_id: str,
+    status: str,
+    pr_url: str = "",
+    total_tokens: int = 0,
+    retries: int = 0,
+    elapsed_s: float = 0.0,
+) -> None:
+    """Print a big banner when a run finishes."""
+
+    log = get_logger("graph", run_id=run_id)
+
+    icon = "✅" if status == "success" else "❌"
+    bar = "═" * _W
+
+    log.info(bar)
+    log.info(f"  {icon}  Run complete  —  Status: {status.upper()}")
+
+    if pr_url:
+        log.info(f"  🔗  PR : {pr_url}")
+
+    log.info(
+        f"  📊  Tokens: {total_tokens:,}   Retries: {retries}   Elapsed: {elapsed_s:.1f}s"
+    )
+
+    log.info(bar + "\n")
