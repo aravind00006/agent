@@ -307,12 +307,20 @@ class _TimedBlock:
                 latency_s=round(elapsed, 3),
             )
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Public factory function — the one thing every other file calls
+# ─────────────────────────────────────────────────────────────────────────────
+
 def get_logger(agent_name: str, run_id: Optional[str] = None) -> AgentLogger:
     """
     Get a logger for an agent. This is the only function you need to import.
 
     """
     if not _initialized:
-        setup_logging()
-
+        setup_logging() # auto-init with defaults if setup wasn't called
     return AgentLogger(agent_name, run_id=run_id)
+
+# ──────────────────────────────────────────────────────────
+# Run-level banners —  to mark start/end of each full run   
+# ──────────────────────────────────────────────────────────
+
