@@ -338,7 +338,7 @@ def log_run_start(run_id: str, issue_url: str) -> None:
     log.info(f"  📎  Issue : {issue_url}")
     log.info(f"  🕐  Start : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     log.info(bar)
-    
+
 def log_run_end(
     run_id: str,
     status: str,
@@ -365,3 +365,10 @@ def log_run_end(
     )
 
     log.info(bar + "\n")
+
+def log_agent_transition(from_agent: str, to_agent: str, run_id: str) -> None:
+    """Log when the graph moves from one agent to the next."""
+    log       = get_logger("graph", run_id=run_id)
+    from_icon = _AGENT_ICONS.get(from_agent, "?")
+    to_icon   = _AGENT_ICONS.get(to_agent, "?")
+    log.info(f"  {from_icon} {from_agent}  →  {to_icon} {to_agent}")
