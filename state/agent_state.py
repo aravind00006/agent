@@ -52,4 +52,18 @@ class AgentState(BaseModel):
 
     test_result:  Optional[TestResult]= None
     test_history: List[TestResult]    = Field(default_factory=list)
-    
+
+    reflection_notes: str = ""
+    retry_count:      int = 0
+    max_retries:      int = 3
+
+    branch_name: str      = ""
+    pr_url:      str      = ""
+    pr_number:   int      = 0
+
+    status:            AgentStatus = AgentStatus.PENDING
+    error_message:     str         = ""
+    total_tokens_used: int         = 0
+    run_id:            str         = ""
+    started_at:        str         = ""
+    finished_at:       str         = ""
