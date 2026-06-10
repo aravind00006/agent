@@ -32,10 +32,24 @@ class CodePatch(BaseModel):
 class AgentState(BaseModel):
 
     issue_url:            str
-    repo_url:             str       = ""
-    repo_local_path:      str       = ""
-    issue_title:          str       = ""
-    issue_body:           str       = ""
-    bug_description:      str       = ""
-    reproduction_steps:   List[str] = Field(default_factory=list)
-    affected_files_hint:  List[str] = Field(default_factory=list)
+    repo_url:             str         = ""
+    repo_local_path:      str         = ""
+
+    issue_title:          str         = ""
+    issue_body:           str         = ""
+    bug_description:      str         = ""
+    reproduction_steps:   List[str]   = Field(default_factory=list)
+    affected_files_hint:  List[str]   = Field(default_factory=list)
+
+    relevant_files:         List[str] = Field(default_factory=list)
+    buggy_file:             str       = ""
+    buggy_lines:            str       = ""
+    localization_reasoning: str       = ""
+
+    current_patch: Optional[CodePatch]= None
+    patch_history: List[CodePatch]    = Field(default_factory=list)
+    fix_strategy:  str                = ""
+
+    test_result:  Optional[TestResult]= None
+    test_history: List[TestResult]    = Field(default_factory=list)
+    
