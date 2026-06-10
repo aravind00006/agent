@@ -22,3 +22,10 @@ class TestResult(BaseModel):
     error_output:   str
     failure_reason: Optional[str] = None
 
+class CodePatch(BaseModel):
+    file_path:     str
+    original_code: str
+    patched_code:  str
+    explanation:   str
+    diff:          str
+
