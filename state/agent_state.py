@@ -15,3 +15,10 @@ class AgentStatus(str, Enum):
     FAILED      = "failed"
     MAX_RETRIES = "max_retries"
 
+class TestResult(BaseModel):
+    passed:         bool
+    total_tests:    int
+    failed_tests:   int
+    error_output:   str
+    failure_reason: Optional[str] = None
+
