@@ -29,3 +29,13 @@ class CodePatch(BaseModel):
     explanation:   str
     diff:          str
 
+class AgentState(BaseModel):
+
+    issue_url:            str
+    repo_url:             str       = ""
+    repo_local_path:      str       = ""
+    issue_title:          str       = ""
+    issue_body:           str       = ""
+    bug_description:      str       = ""
+    reproduction_steps:   List[str] = Field(default_factory=list)
+    affected_files_hint:  List[str] = Field(default_factory=list)
