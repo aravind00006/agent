@@ -13,15 +13,20 @@ from typing import Optional
 from langchain_core.tools import tool
 from core.logger import get_logger
 
+# Module-level logger — no run_id here, agents pass context via log.bind
 _log = get_logger("tools")
 
+# Directories we always skip when listing — they're noisy and irrelevant
 _SKIP_DIRS = {
     "node_modules", ".git", "__pycache__", "dist", "build",
     ".tox", ".venv", "venv", "env", ".mypy_cache", ".pytest_cache",
 }
 
+# Token limit for reading files
 _MAX_TOKENS      = 4_000
-_CHARS_PER_TOKEN = 4
+_CHARS_PER_TOKEN = 4 # rough estimate: 1 token ≈ 4 characters
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 @tool
 def read_file(file_path: str, max_tokens: int = _MAX_TOKENS) -> str:
@@ -49,6 +54,8 @@ def read_file(file_path: str, max_tokens: int = _MAX_TOKENS) -> str:
 
     return text
 
+# ─────────────────────────────────────────────────────────────────────────────
+
 @tool
 def write_file(file_path: str, content: str) -> bool:
     _log.tool_call("write_file", path=file_path, bytes=len(content))
@@ -63,7 +70,9 @@ def write_file(file_path: str, content: str) -> bool:
     except Exception as e:
         _log.tool_result("write_file", success=False, path=file_path, error=str(e))
         return False
-    
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 @tool
 def list_directory(dir_path: str, max_depth: int = 2) -> str:
     _log.tool_call("list_directory", path=dir_path, depth=max_depth)
@@ -74,3 +83,34 @@ def list_directory(dir_path: str, max_depth: int = 2) -> str:
         raise NotADirectoryError(f"Not a directory: {dir_path}")
 
     lines = [str(root)]
+
+    def _walk(current: Path, prefix: str, depth: int) -> None:
+        if depth > max_depth:
+            return
+
+        try:
+            entries = sorted(current.iterdir(), key=lambda p: (p.is_file(), p.name))
+        except PermissionError:
+            return
+
+        entries = [
+            e for e in entries
+            if e.name not in _SKIP_DIRS
+            and not e.name.endswith(".egg-info")
+        ]
+
+        for i, entry in enumerate(entries):
+            is_last   = (i == len(entries) - 1)
+            connector = "└── " if is_last else "├── "
+            suffix    = "/" if entry.is_dir() else ""
+            lines.append(f"{prefix}{connector}{entry.name}{suffix}")
+
+            if entry.is_dir():
+                extension = "    " if is_last else "│   "
+                _walk(entry, prefix + extension, depth + 1)
+
+    _walk(root, "", 1)
+
+    tree = "\n".join(lines)
+    _log.tool_result("list_directory", success=True, entries=len(lines) - 1)
+    return tree
