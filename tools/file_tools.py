@@ -35,8 +35,8 @@ def read_file(file_path: str, max_tokens: int = _MAX_TOKENS) -> str:
 
     text       = path.read_text(encoding="utf-8", errors="replace")
     char_limit = max_tokens * _CHARS_PER_TOKEN
-    truncated  = False
 
+    truncated  = False
     if len(text) > char_limit:
         text      = text[:char_limit]
         truncated = True
@@ -48,3 +48,18 @@ def read_file(file_path: str, max_tokens: int = _MAX_TOKENS) -> str:
         text += f"\n\n... [TRUNCATED at {max_tokens:,} tokens] ..."
 
     return text
+
+@tool
+def write_file(file_path: str, content: str) -> bool:
+    _log.tool_call("write_file", path=file_path, bytes=len(content))
+
+    path = Path(file_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        path.write_text(content, encoding="utf-8")
+        _log.tool_result("write_file", success=True, path=file_path, bytes=len(content))
+        return True
+    except Exception as e:
+        _log.tool_result("write_file", success=False, path=file_path, error=str(e))
+        return False
