@@ -63,3 +63,14 @@ def write_file(file_path: str, content: str) -> bool:
     except Exception as e:
         _log.tool_result("write_file", success=False, path=file_path, error=str(e))
         return False
+    
+@tool
+def list_directory(dir_path: str, max_depth: int = 2) -> str:
+    _log.tool_call("list_directory", path=dir_path, depth=max_depth)
+
+    root = Path(dir_path)
+    if not root.is_dir():
+        _log.tool_result("list_directory", success=False, reason="not_a_directory")
+        raise NotADirectoryError(f"Not a directory: {dir_path}")
+
+    lines = [str(root)]
