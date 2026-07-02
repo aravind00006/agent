@@ -25,3 +25,11 @@ def _parse_issue_url(issue_url: str) -> tuple[str, str, int]:
     if not m:
         raise ValueError(f"Cannot parse GitHub issue URL: {issue_url!r}")
     return m.group(1), m.group(2), int(m.group(3))
+
+def _get_github_client() -> Github:
+    """Create a GitHub API client using the token from .env"""
+    token = os.getenv("GITHUB_TOKEN")
+    if not token:
+        _log.warning("GITHUB_TOKEN not set — API rate limits will be very low")
+    return Github(token)
+
