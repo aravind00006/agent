@@ -33,3 +33,37 @@ def _get_github_client() -> Github:
         _log.warning("GITHUB_TOKEN not set — API rate limits will be very low")
     return Github(token)
 
+@tool
+def fetch_github_issue(issue_url: str) -> dict:
+    _log.tool_call("fetch_github_issue", issue_url=issue_url)
+
+    try:
+        owner, repo_name, issue_number = _parse_issue_url(issue_url)
+        _log.debug("Parsed issue URL", owner=owner, repo=repo_name, issue=issue_number)
+
+        gh    = _get_github_client()
+        repo  = gh.get_repo(f"{owner}/{repo_name}")
+        issue = repo.get_issue(issue_number)
+
+        comments = [
+            {"author": c.user.login, "body": c.body}
+            for c in issue.get_comments()
+        ][:10]
+
+        result = {
+            "number":     issue.number,
+            "title":      issue.title,
+            "body":       issue.body or "",
+            "labels":     [lbl.name for lbl in issue.labels],
+            "comments":   comments,
+            "repo_url":   repo.clone_url,
+            "state":      issue.state,
+            "created_at": str(issue.created_at),
+        }
+
+        _log.tool_result("fetch_github_issue", success=True, title=issue.title, comments=len(comments))
+        return result
+
+    except GithubException as exc:
+        _log.tool_result("fetch_github_issue", success=False, error=str(exc))
+        raise RuntimeError(f"GitHub API error: {exc}") from exc
