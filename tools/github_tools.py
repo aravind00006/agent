@@ -67,3 +67,23 @@ def fetch_github_issue(issue_url: str) -> dict:
     except GithubException as exc:
         _log.tool_result("fetch_github_issue", success=False, error=str(exc))
         raise RuntimeError(f"GitHub API error: {exc}") from exc
+    
+@tool
+def clone_repository(repo_url: str, target_dir: str = "") -> str:
+    _log.tool_call("clone_repository", repo_url=repo_url, target_dir=target_dir)
+
+    dest = target_dir or tempfile.mkdtemp(prefix="bugfixer_repo_")
+    _log.debug("Cloning into", dest=dest)
+
+    try:
+        with _log.timed(f"git clone {repo_url}"):
+            Repo.clone_from(repo_url, dest, depth=1)
+
+        _log.tool_result("clone_repository", success=True, path=dest)
+        _log.success(f"Repository cloned → {dest}")
+        return dest
+
+    except GitCommandError as exc:
+        _log.tool_result("clone_repository", success=False, error=str(exc))
+        raise RuntimeError(f"Git clone failed: {exc}") from exc
+    
