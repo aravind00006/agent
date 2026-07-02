@@ -123,3 +123,36 @@ def commit_and_push(repo_local_path: str, branch_name: str, commit_message: str)
     except GitCommandError as exc:
         _log.tool_result("commit_and_push", success=False, error=str(exc))
         raise RuntimeError(f"Commit/push failed: {exc}") from exc
+    
+@tool
+def open_pull_request(
+    repo_url: str,
+    branch_name: str,
+    title: str,
+    body: str,
+    base_branch: str = "main",
+) -> str:
+    _log.tool_call("open_pull_request", branch=branch_name, title=title[:60], base=base_branch)
+
+    try:
+        m = re.search(r"github\.com[:/]([^/]+)/([^/.]+)", repo_url)
+        if not m:
+            raise ValueError(f"Cannot parse repo URL: {repo_url!r}")
+        owner, repo_name = m.group(1), m.group(2)
+
+        gh   = _get_github_client()
+        repo = gh.get_repo(f"{owner}/{repo_name}")
+        pr   = repo.create_pull(
+            title=title,
+            body=body,
+            head=branch_name,
+            base=base_branch,
+        )
+
+        _log.tool_result("open_pull_request", success=True, pr_number=pr.number)
+        _log.pr(pr.html_url, number=pr.number)
+        return pr.html_url
+
+    except GithubException as exc:
+        _log.tool_result("open_pull_request", success=False, error=str(exc))
+        raise RuntimeError(f"PR creation failed: {exc}") from exc
