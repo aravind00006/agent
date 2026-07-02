@@ -35,6 +35,7 @@ def _get_github_client() -> Github:
 
 @tool
 def fetch_github_issue(issue_url: str) -> dict:
+    """Fetch a GitHub issue title, body, labels, and comments by URL."""
     _log.tool_call("fetch_github_issue", issue_url=issue_url)
 
     try:
@@ -70,6 +71,7 @@ def fetch_github_issue(issue_url: str) -> dict:
     
 @tool
 def clone_repository(repo_url: str, target_dir: str = "") -> str:
+    """Clone a GitHub repository to a local directory. Returns the local path."""
     _log.tool_call("clone_repository", repo_url=repo_url, target_dir=target_dir)
 
     dest = target_dir or tempfile.mkdtemp(prefix="bugfixer_repo_")
@@ -89,6 +91,7 @@ def clone_repository(repo_url: str, target_dir: str = "") -> str:
     
 @tool
 def create_branch(repo_local_path: str, branch_name: str) -> bool:
+    """Create and checkout a new git branch in the local repository."""
     _log.tool_call("create_branch", path=repo_local_path, branch=branch_name)
 
     try:
@@ -106,6 +109,7 @@ def create_branch(repo_local_path: str, branch_name: str) -> bool:
 
 @tool
 def commit_and_push(repo_local_path: str, branch_name: str, commit_message: str) -> bool:
+    """Stage all changes, commit with message, and push to the remote branch."""
     _log.tool_call("commit_and_push", path=repo_local_path, branch=branch_name, message=commit_message[:80])
 
     try:
@@ -132,6 +136,7 @@ def open_pull_request(
     body: str,
     base_branch: str = "main",
 ) -> str:
+    """Open a Pull Request on GitHub from branch_name into base_branch. Returns the PR URL."""
     _log.tool_call("open_pull_request", branch=branch_name, title=title[:60], base=base_branch)
 
     try:
