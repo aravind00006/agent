@@ -87,3 +87,39 @@ def clone_repository(repo_url: str, target_dir: str = "") -> str:
         _log.tool_result("clone_repository", success=False, error=str(exc))
         raise RuntimeError(f"Git clone failed: {exc}") from exc
     
+@tool
+def create_branch(repo_local_path: str, branch_name: str) -> bool:
+    _log.tool_call("create_branch", path=repo_local_path, branch=branch_name)
+
+    try:
+        repo = Repo(repo_local_path)
+        repo.git.checkout("-b", branch_name)
+
+        _log.tool_result("create_branch", success=True, branch=branch_name)
+        _log.success(f"Branch created: {branch_name}")
+        return True
+
+    except GitCommandError as exc:
+        _log.tool_result("create_branch", success=False, error=str(exc))
+        raise RuntimeError(f"Branch creation failed: {exc}") from exc
+
+
+@tool
+def commit_and_push(repo_local_path: str, branch_name: str, commit_message: str) -> bool:
+    _log.tool_call("commit_and_push", path=repo_local_path, branch=branch_name, message=commit_message[:80])
+
+    try:
+        repo = Repo(repo_local_path)
+        repo.git.add("-A")
+        repo.index.commit(commit_message)
+
+        with _log.timed("git push"):
+            repo.remotes.origin.push(branch_name)
+
+        _log.tool_result("commit_and_push", success=True, branch=branch_name)
+        _log.success(f"Committed and pushed → {branch_name}")
+        return True
+
+    except GitCommandError as exc:
+        _log.tool_result("commit_and_push", success=False, error=str(exc))
+        raise RuntimeError(f"Commit/push failed: {exc}") from exc
