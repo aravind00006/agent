@@ -50,3 +50,33 @@ def search_codebase(repo_path: str, query: str) -> List[dict]:
         _log.warning("No matches found", query=query, repo=repo_path)
 
     return matches
+
+@tool
+def find_function_definition(repo_path: str, function_name: str) -> List[dict]:
+    """
+    Find where a function is defined in the repository.
+    """
+    _log.tool_call("find_function_definition", repo=repo_path, fn=function_name)
+
+    pattern = (
+        rf"(def\s+{function_name}\s*\(|"
+        rf"async\s+def\s+{function_name}\s*\(|"
+        rf"function\s+{function_name}\s*\(|"
+        rf"async\s+function\s+{function_name}\s*\()"
+    )
+
+    result = _run_ripgrep(["-e", pattern, repo_path])
+
+    definitions: list[dict] = []
+    if result.returncode == 0:
+        for raw_line in result.stdout.splitlines()[:_MAX_RESULTS]:
+            parts = raw_line.split(":", 2)
+            if len(parts) >= 2:
+                definitions.append({
+                    "file_path":  parts[0],
+                    "start_line": int(parts[1]) if parts[1].isdigit() else 0,
+                    "full_code":  parts[2].strip() if len(parts) == 3 else "",
+                })
+
+    _log.tool_result("find_function_definition", success=True, fn=function_name, found=len(definitions))
+    return definitions
