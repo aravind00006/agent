@@ -80,3 +80,18 @@ def find_function_definition(repo_path: str, function_name: str) -> List[dict]:
 
     _log.tool_result("find_function_definition", success=True, fn=function_name, found=len(definitions))
     return definitions
+
+@tool
+def get_file_outline(file_path: str) -> str:
+    """
+    List all function and class definitions in a file with their line numbers.
+    """
+    _log.tool_call("get_file_outline", path=file_path)
+
+    path = Path(file_path)
+    if not path.exists():
+        _log.tool_result("get_file_outline", success=False, reason="file_not_found")
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    suffix = path.suffix.lower()
+    lines  = path.read_text(encoding="utf-8", errors="replace").splitlines()
