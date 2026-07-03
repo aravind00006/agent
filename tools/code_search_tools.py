@@ -95,3 +95,21 @@ def get_file_outline(file_path: str) -> str:
 
     suffix = path.suffix.lower()
     lines  = path.read_text(encoding="utf-8", errors="replace").splitlines()
+
+    if suffix == ".py":
+        patterns = ("def ", "async def ", "class ")
+    elif suffix in (".js", ".ts", ".jsx", ".tsx"):
+        patterns = ("function ", "class ", "const ", "export ")
+    else:
+        patterns = ("def ", "class ", "function ")
+
+    outline_lines: list[str] = []
+    for i, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if any(stripped.startswith(p) for p in patterns):
+            outline_lines.append(f"Line {i:>4}: {stripped[:100]}")
+
+    outline = "\n".join(outline_lines) if outline_lines else "(no definitions found)"
+
+    _log.tool_result("get_file_outline", success=True, symbols=len(outline_lines))
+    return outline
