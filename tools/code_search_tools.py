@@ -31,3 +31,22 @@ def search_codebase(repo_path: str, query: str) -> List[dict]:
     if result.returncode == 2:
         _log.tool_result("search_codebase", success=False, stderr=result.stderr[:200])
         raise RuntimeError(f"ripgrep error: {result.stderr}")
+    
+    matches: list[dict] = []
+    for line in result.stdout.splitlines():
+        parts = line.split(":", 2)
+        if len(parts) == 3:
+            matches.append({
+                "file":         parts[0],
+                "line_number":  int(parts[1]),
+                "line_content": parts[2].strip(),
+            })
+
+    matches = matches[:_MAX_RESULTS]
+
+    _log.tool_result("search_codebase", success=True, matches=len(matches), query=query)
+
+    if not matches:
+        _log.warning("No matches found", query=query, repo=repo_path)
+
+    return matches
