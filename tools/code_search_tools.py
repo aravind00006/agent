@@ -18,3 +18,16 @@ def _run_ripgrep(args: list[str]) -> subprocess.CompletedProcess:
     cmd = ["rg", "--no-heading", "--line-number", "--color=never"] + args
     _log.debug("Running ripgrep", cmd=" ".join(cmd[:6]) + " ...")
     return subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+
+@tool
+def search_codebase(repo_path: str, query: str) -> List[dict]:
+    """
+    Search for a text pattern across all files in the repository.
+    """
+    _log.tool_call("search_codebase", repo=repo_path, query=query)
+
+    result = _run_ripgrep([query, repo_path, "--max-count=20"])
+
+    if result.returncode == 2:
+        _log.tool_result("search_codebase", success=False, stderr=result.stderr[:200])
+        raise RuntimeError(f"ripgrep error: {result.stderr}")
