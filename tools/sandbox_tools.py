@@ -34,4 +34,14 @@ def _parse_pytest_output(stdout: str, stderr: str) -> TestResult:
             error_output=combined[:2000], failure_reason="import_error",
         )
     
-    
+    summary = re.search(
+        r"(\d+) passed(?:,\s*(\d+) failed)?|(\d+) failed(?:,\s*(\d+) passed)?",
+        combined,
+    )
+
+    if not summary:
+        _log.error("Could not parse pytest output — treating as failure")
+        return TestResult(
+            passed=False, total_tests=0, failed_tests=0,
+            error_output=combined[:2000], failure_reason="unparseable_output",
+        )
