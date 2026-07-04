@@ -45,3 +45,24 @@ def _parse_pytest_output(stdout: str, stderr: str) -> TestResult:
             passed=False, total_tests=0, failed_tests=0,
             error_output=combined[:2000], failure_reason="unparseable_output",
         )
+    
+    g      = summary.groups()
+    passed = int(g[0] or g[3] or 0)
+    failed = int(g[1] or g[2] or 0)
+    total  = passed + failed
+    all_ok = failed == 0 and total > 0
+
+    fail_section = ""
+    if not all_ok:
+        m = re.search(r"(FAILURES|ERRORS)(.*?)=====", combined, re.DOTALL)
+        if m:
+            fail_section = m.group(2)[:2000]
+
+    return TestResult(
+        passed=all_ok,
+        total_tests=total,
+        failed_tests=failed,
+        error_output=fail_section or combined[:2000],
+        failure_reason=None if all_ok else f"{failed} test(s) failed",
+    )
+
