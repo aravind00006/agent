@@ -97,3 +97,12 @@ def _run_in_docker(repo_path: str, test_command: str) -> TestResult:
         stdout = ""
         stderr = str(exc)
         _log.warning("Container exited with error", error=str(exc)[:200])
+
+        elapsed = time.perf_counter() - start
+    _log.debug(
+        "Docker sandbox finished",
+        elapsed_s=round(elapsed, 2),
+        stdout_chars=len(stdout),
+    )
+
+    return _parse_pytest_output(stdout, stderr)
