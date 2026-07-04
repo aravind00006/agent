@@ -106,3 +106,24 @@ def _run_in_docker(repo_path: str, test_command: str) -> TestResult:
     )
 
     return _parse_pytest_output(stdout, stderr)
+
+@tool
+def run_tests_in_sandbox(repo_path: str, test_command: str = "pytest") -> dict:
+    """
+    Run the test suite inside an isolated Docker container.
+    """
+    _log.tool_call("run_tests_in_sandbox", repo=repo_path, cmd=test_command)
+
+    with _log.timed(f"sandbox [{test_command}]"):
+        result = _run_in_docker(repo_path, test_command)
+
+    status = "PASS ✅" if result.passed else "FAIL ❌"
+    _log.info(
+        f"Test result: {status}",
+        total=result.total_tests,
+        failed=result.failed_tests,
+        reason=result.failure_reason,
+    )
+    _log.tool_result("run_tests_in_sandbox", success=result.passed)
+
+    return result.model_dump()
