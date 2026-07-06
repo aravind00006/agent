@@ -1,0 +1,5 @@
+FROM python:3.11-slim
+
+# Bake pytest in at build time — the sandbox container itself has
+# no internet access, so anything it needs must already be here.
+RUN pip install --no-cache-dir pytest
