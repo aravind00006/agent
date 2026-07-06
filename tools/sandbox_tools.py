@@ -14,7 +14,7 @@ _log = get_logger("sandbox")
 
 _TIMEOUT   = 120
 _MEM_LIMIT = "512m"
-_IMAGE     = "python:3.11-slim"
+_IMAGE     = "bugfixer-sandbox:latest"
 
 def _parse_pytest_output(stdout: str, stderr: str) -> TestResult:
     """Read pytest output and return a structured TestResult."""
@@ -74,36 +74,63 @@ def _run_in_docker(repo_path: str, test_command: str) -> TestResult:
         raise RuntimeError("docker SDK not installed. Run: pip install docker")
 
     _log.step("Starting Docker sandbox", image=_IMAGE, command=test_command)
-    client = docker.from_env()
 
-    cmd   = f"bash -c 'pip install -e . -q 2>&1 && {test_command} -v 2>&1'"
+    try:
+        client = docker.from_env()
+    except Exception as exc:
+        _log.error("Could not connect to Docker", error=str(exc))
+        return TestResult(
+            passed=False,
+            total_tests=0,
+            failed_tests=0,
+            error_output=str(exc),
+            failure_reason="docker_not_available",
+        )
+
+    cmd = (
+    f"bash -c 'pip install -e . -q 2>&1 && "
+    f"{test_command} -v 2>&1'"
+        )
+
+    stdout = ""
+    stderr = ""
+
     start = time.perf_counter()
 
     try:
-        raw = client.containers.run(
+        # Run with detach=True so we control output capture ourselves
+        container = client.containers.run(
             image=_IMAGE,
             command=cmd,
             volumes={repo_path: {"bind": "/workspace", "mode": "rw"}},
             working_dir="/workspace",
             mem_limit=_MEM_LIMIT,
             network_disabled=True,
-            remove=True,
-            timeout=_TIMEOUT,
+            detach=True,           # run in background so we can stream logs
         )
-        stdout = raw.decode("utf-8", errors="replace")
-        stderr = ""
+
+        # Wait for it to finish and grab all output
+        container.wait()
+        raw_logs = container.logs(stdout=True, stderr=True)
+        stdout   = raw_logs.decode("utf-8", errors="replace")
+        _log.debug("FULL OUTPUT", output=stdout)
+        container.remove()         # clean up manually since remove=True won't work with detach=True
 
     except Exception as exc:
         stdout = ""
         stderr = str(exc)
-        _log.warning("Container exited with error", error=str(exc)[:200])
+        _log.warning("Container error", error=str(exc)[:200])
 
-        elapsed = time.perf_counter() - start
+    elapsed = time.perf_counter() - start
     _log.debug(
         "Docker sandbox finished",
         elapsed_s=round(elapsed, 2),
         stdout_chars=len(stdout),
     )
+
+    # Show a snippet of the output in logs so we can debug
+    if stdout:
+        _log.debug("Test output snippet", snippet=stdout[:300])
 
     return _parse_pytest_output(stdout, stderr)
 
